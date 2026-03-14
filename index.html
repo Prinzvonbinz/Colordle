@@ -2,25 +2,86 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Colordle 7-Farben</title>
+<title>Colordle 7-Farben Dark Mode</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-  body { font-family: sans-serif; text-align: center; margin: 20px; }
-  #color-buttons button { width: 40px; height: 40px; margin: 3px; border: none; cursor: pointer; }
-  #selected-colors { margin: 20px; }
-  .color-slot { display: inline-block; width: 30px; height: 30px; border: 1px solid #333; margin: 2px; vertical-align: middle; }
-  #submit { margin: 10px; padding: 10px 20px; cursor: pointer; }
-  #win-screen { display: none; }
+  body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+  }
+  h1 { margin-top: 20px; text-align: center; }
+  #colorChart { margin-top: 20px; max-width: 90vw; max-height: 40vh; }
+  #selected-colors {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .color-slot {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #fff;
+    margin: 5px;
+    border-radius: 6px;
+    background-color: #222;
+  }
+  #color-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 95vw;
+    margin-bottom: 20px;
+  }
+  #color-buttons button {
+    width: 40px;
+    height: 40px;
+    margin: 4px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #submit {
+    padding: 12px 25px;
+    margin-bottom: 20px;
+    background-color: #1f1f1f;
+    border: 2px solid #fff;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #submit:active { transform: scale(0.95); }
+  #win-screen {
+    display: none;
+    text-align: center;
+  }
+  #win-screen button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    background-color: #ff9800;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
 <h1>Colordle 7-Farben</h1>
-
-<canvas id="colorChart" width="300" height="300"></canvas>
+<canvas id="colorChart"></canvas>
 
 <div id="selected-colors">
-  <!-- 7 Slots -->
   <div class="color-slot" id="slot0"></div>
   <div class="color-slot" id="slot1"></div>
   <div class="color-slot" id="slot2"></div>
@@ -31,7 +92,6 @@
 </div>
 
 <div id="color-buttons"></div>
-
 <button id="submit">Submit</button>
 
 <div id="win-screen">
@@ -64,8 +124,8 @@ const ctx = document.getElementById('colorChart').getContext('2d');
 const chartData = {
   labels: colors,
   datasets: [{
-    data: colors.map(c => endColor.filter(ec=>ec===c).length), // Anzahl pro Farbe
-    backgroundColor: colors.map(c=>'#ccc'), // Start neutral
+    data: colors.map(c => endColor.filter(ec=>ec===c).length),
+    backgroundColor: colors.map(c=>'#333'), // neutral start
     borderWidth: 1
   }]
 };
@@ -73,7 +133,8 @@ const colorChart = new Chart(ctx, {
   type: 'doughnut',
   data: chartData,
   options: {
-    responsive: false,
+    responsive: true,
+    maintainAspectRatio: true,
     plugins: { legend: { display: false } }
   }
 });
@@ -104,6 +165,13 @@ document.getElementById('submit').onclick = ()=>{
     else win = false;
   });
   colorChart.update();
+
+  // Slots zurücksetzen
+  playerChoice.length = 0;
+  for(let i=0;i<maxSlots;i++){
+    document.getElementById('slot'+i).style.backgroundColor = '#222';
+  }
+
   if(win){
     document.getElementById('win-screen').style.display = 'block';
     document.getElementById('stats').innerText = `Versuche: ${attempts}`;
