@@ -15,7 +15,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
     min-height: 100vh;
   }
   h1 { margin-top: 20px; text-align: center; }
@@ -33,6 +32,7 @@
     margin: 5px;
     border-radius: 6px;
     background-color: #222;
+    cursor: pointer;
   }
   #color-buttons {
     display: flex;
@@ -45,7 +45,7 @@
     width: 40px;
     height: 40px;
     margin: 4px;
-    border: none;
+    border: 2px solid transparent;
     border-radius: 6px;
     cursor: pointer;
   }
@@ -112,46 +112,78 @@ for(let i=0; i<maxSlots; i++){
   endColor.push(colors[Math.floor(Math.random()*colors.length)]);
 }
 
-// Hilfsfunktion: Zähle Farben
+// Zähle Farben
 function countColors(arr){
   const counts = {};
   arr.forEach(c=>counts[c]=(counts[c]||0)+1);
   return counts;
 }
 
-// Kreisdiagramm vorbereiten
+// Kreisdiagramm
 const ctx = document.getElementById('colorChart').getContext('2d');
 const chartData = {
   labels: colors,
   datasets: [{
     data: colors.map(c => endColor.filter(ec=>ec===c).length),
-    backgroundColor: colors.map(c=>'#333'), // neutral start
+    backgroundColor: colors.map(c=>'#333'),
     borderWidth: 1
   }]
 };
 const colorChart = new Chart(ctx, {
   type: 'doughnut',
   data: chartData,
-  options: {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: { legend: { display: false } }
-  }
+  options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
 });
 
-// Farb-Buttons erstellen
+// Farb-Buttons
 const buttonsDiv = document.getElementById('color-buttons');
+const buttonsMap = {};
 colors.forEach(c=>{
   const btn = document.createElement('button');
   btn.style.backgroundColor = c;
   btn.onclick = ()=>addColor(c);
   buttonsDiv.appendChild(btn);
+  buttonsMap[c] = btn;
 });
 
+// Farbe hinzufügen
 function addColor(c){
   if(playerChoice.length >= maxSlots) return;
   playerChoice.push(c);
   document.getElementById('slot'+(playerChoice.length-1)).style.backgroundColor = c;
+  updateButtonFrames();
+}
+
+// Slot entfernen
+for(let i=0;i<maxSlots;i++){
+  document.getElementById('slot'+i).onclick = ()=>{
+    if(playerChoice[i]){
+      playerChoice.splice(i,1);
+      refreshSlots();
+      updateButtonFrames();
+    }
+  }
+}
+
+// Slots aktualisieren
+function refreshSlots(){
+  for(let i=0;i<maxSlots;i++){
+    document.getElementById('slot'+i).style.backgroundColor = playerChoice[i] || '#222';
+  }
+}
+
+// Buttons gold einrahmen, wenn richtig aber falscher Anteil
+function updateButtonFrames(){
+  const endCounts = countColors(endColor);
+  const playerCounts = countColors(playerChoice);
+  colors.forEach(c=>{
+    const btn = buttonsMap[c];
+    if(playerCounts[c] && playerCounts[c] !== endCounts[c] && endCounts[c]){
+      btn.style.border = '2px solid gold';
+    } else {
+      btn.style.border = '2px solid transparent';
+    }
+  });
 }
 
 document.getElementById('submit').onclick = ()=>{
@@ -168,9 +200,8 @@ document.getElementById('submit').onclick = ()=>{
 
   // Slots zurücksetzen
   playerChoice.length = 0;
-  for(let i=0;i<maxSlots;i++){
-    document.getElementById('slot'+i).style.backgroundColor = '#222';
-  }
+  refreshSlots();
+  updateButtonFrames();
 
   if(win){
     document.getElementById('win-screen').style.display = 'block';
