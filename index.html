@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Colordle 7-Farben</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: sans-serif; text-align: center; margin: 20px; }
+  #color-buttons button { width: 40px; height: 40px; margin: 3px; border: none; cursor: pointer; }
+  #selected-colors { margin: 20px; }
+  .color-slot { display: inline-block; width: 30px; height: 30px; border: 1px solid #333; margin: 2px; vertical-align: middle; }
+  #submit { margin: 10px; padding: 10px 20px; cursor: pointer; }
+  #win-screen { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Colordle 7-Farben</h1>
+
+<canvas id="colorChart" width="300" height="300"></canvas>
+
+<div id="selected-colors">
+  <!-- 7 Slots -->
+  <div class="color-slot" id="slot0"></div>
+  <div class="color-slot" id="slot1"></div>
+  <div class="color-slot" id="slot2"></div>
+  <div class="color-slot" id="slot3"></div>
+  <div class="color-slot" id="slot4"></div>
+  <div class="color-slot" id="slot5"></div>
+  <div class="color-slot" id="slot6"></div>
+</div>
+
+<div id="color-buttons"></div>
+
+<button id="submit">Submit</button>
+
+<div id="win-screen">
+  <h2>🎉 Du hast gewonnen!</h2>
+  <p id="stats"></p>
+  <button onclick="restartGame()">Neustart</button>
+</div>
+
+<script>
+const colors = ['red','blue','yellow','green','orange','purple','pink','cyan','magenta','brown','lime','teal','navy','gray','black'];
+const endColor = [];
+const playerChoice = [];
+let attempts = 0;
+const maxSlots = 7;
+
+// zufällige Endfarbe erstellen
+for(let i=0; i<maxSlots; i++){
+  endColor.push(colors[Math.floor(Math.random()*colors.length)]);
+}
+
+// Hilfsfunktion: Zähle Farben
+function countColors(arr){
+  const counts = {};
+  arr.forEach(c=>counts[c]=(counts[c]||0)+1);
+  return counts;
+}
+
+// Kreisdiagramm vorbereiten
+const ctx = document.getElementById('colorChart').getContext('2d');
+const chartData = {
+  labels: colors,
+  datasets: [{
+    data: colors.map(c => endColor.filter(ec=>ec===c).length), // Anzahl pro Farbe
+    backgroundColor: colors.map(c=>'#ccc'), // Start neutral
+    borderWidth: 1
+  }]
+};
+const colorChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: chartData,
+  options: {
+    responsive: false,
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Farb-Buttons erstellen
+const buttonsDiv = document.getElementById('color-buttons');
+colors.forEach(c=>{
+  const btn = document.createElement('button');
+  btn.style.backgroundColor = c;
+  btn.onclick = ()=>addColor(c);
+  buttonsDiv.appendChild(btn);
+});
+
+function addColor(c){
+  if(playerChoice.length >= maxSlots) return;
+  playerChoice.push(c);
+  document.getElementById('slot'+(playerChoice.length-1)).style.backgroundColor = c;
+}
+
+document.getElementById('submit').onclick = ()=>{
+  if(playerChoice.length !== maxSlots) { alert('Bitte alle 7 Farben auswählen!'); return; }
+  attempts++;
+  const endCounts = countColors(endColor);
+  const playerCounts = countColors(playerChoice);
+  let win = true;
+  colors.forEach((c,i)=>{
+    if(playerCounts[c] === endCounts[c]) chartData.datasets[0].backgroundColor[i] = c;
+    else win = false;
+  });
+  colorChart.update();
+  if(win){
+    document.getElementById('win-screen').style.display = 'block';
+    document.getElementById('stats').innerText = `Versuche: ${attempts}`;
+  }
+}
+
+function restartGame(){
+  location.reload();
+}
+</script>
+
+</body>
+</html>
